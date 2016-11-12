@@ -35,10 +35,10 @@ import urllib.parse
 import json
 import time
 from contextlib import closing
-import IdentificationProfile
-import IdentificationResponse
-import EnrollmentResponse
-import ProfileCreationResponse
+from .IdentificationProfile import IdentificationProfile
+from .IdentificationResponse import IdentificationResponse
+from .EnrollmentResponse import EnrollmentResponse
+from .ProfileCreationResponse import ProfileCreationResponse
 import logging
 
 class IdentificationServiceHttpClientHelper:
@@ -143,7 +143,7 @@ class IdentificationServiceHttpClientHelper:
 
             if res.status == self._STATUS_OK:
                 # Parse the response body
-                return ProfileCreationResponse.ProfileCreationResponse(json.loads(message))
+                return ProfileCreationResponse(json.loads(message))
             else:
                 reason = res.reason if not message else message
                 raise Exception('Error creating profile: ' + reason)
@@ -234,14 +234,14 @@ class IdentificationServiceHttpClientHelper:
 
             if res.status == self._STATUS_OK:
                 # Parse the response body
-                return EnrollmentResponse.EnrollmentResponse(json.loads(message))
+                return EnrollmentResponse(json.loads(message))
             elif res.status == self._STATUS_ACCEPTED:
                 operation_url = res.getheader(self._OPERATION_LOCATION_HEADER)
 
-                return EnrollmentResponse.EnrollmentResponse(
+                return EnrollmentResponse(
                     self._poll_operation(operation_url))
             else:
-                reason = res.reason if not message else message
+                reason = res.reason if not message else messagef
                 raise Exception('Error enrolling profile: ' + reason)
         except:
             logging.error('Error enrolling profile.')
@@ -280,11 +280,11 @@ class IdentificationServiceHttpClientHelper:
 
             if res.status == self._STATUS_OK:
                 # Parse the response body
-                return IdentificationResponse.IdentificationResponse(json.loads(message))
+                return IdentificationResponse(json.loads(message))
             elif res.status == self._STATUS_ACCEPTED:
                 operation_url = res.getheader(self._OPERATION_LOCATION_HEADER)
 
-                return IdentificationResponse.IdentificationResponse(
+                return IdentificationResponse(
                     self._poll_operation(operation_url))
             else:
                 reason = res.reason if not message else message

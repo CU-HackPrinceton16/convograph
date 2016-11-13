@@ -22,7 +22,7 @@ import httplib2
 from oauth2client.client import GoogleCredentials
 from oauth2client.service_account import ServiceAccountCredentials
 
-def main():
+def analyze_conversation():
 
 	locale = 'en-us'
 	localdir = os.path.dirname(__file__)
@@ -283,10 +283,10 @@ def main():
 
 
 	##################
-	# TEXT TO SPEECH #
+	# SPEECH TO TEXT #
 	##################
 
-	print("text to speech...")
+	print("speech to text...")
 
 	#this is google.
 	service = get_speech_service()
@@ -355,12 +355,71 @@ def main():
 			raise RequestError("recognition connection failed: {0}".format(e.reason))
 
 	#[id, timestamp, duration, speaker, text, sentiment]
-	pprint(tts_list)
 
+	#[time, [[A, B, sentiment], [A, B, sentiment], ...]]
 	edges = transcript_to_edge(tts_list)
-	pprint(edges)
+	#[time, [[speaker, sentiment], [speaker, sentiment], ...]]
 	nodes = transcript_to_node(tts_list)
-	pprint(nodes)
+
+	#[[time, [[speaker, sentiment], ...], [[A, B, sentiment], ...], ...]
+	comprehensive = []
+	gg = 0;
+	for ff in range(len(nodes)):
+		#[time, [[speaker, sentiment], ...], [[A, B, sentiment], ...]
+		now_list = []
+		curr_time = nodes[ff][0]
+		now_list.append(curr_time)
+		now_list.append(nodes[ff][1])
+		now_list.append(edges[gg][1])
+		if(curr_time == edges[gg][0]):
+			if(gg < len(edges) - 1):
+				gg = gg + 1
+		comprehensive.append(now_list)
+	pprint(comprehensive)
+
+
+def comprehensive_to_json(comprehensive):
+	localdir = os.path.dirname(__file__)
+	hardcoded = [[0, [['1', 0.9695704]], [['1', '0', 0.08703990666666667]]],[9702, [['1', 0.9695704], ['0', 0.6568466]], [['1', '0', 0.08703990666666667]]],[12008, [['1', 0.9771753000000001], ['0', 0.6568466]], [['1', '0', 0.08703990666666667]]],[14252, [['1', 0.9771753000000001], ['0', 0.65809505]], [['1', '0', 0.08186945833333334]]],[20858, [['1', 0.9771753000000001], ['0', 0.6039309333333334]], [['1', '0', 0.073409506]]],[29382, [['1', 0.9771753000000001], ['0', 0.69530495]], [['1', '0', 0.073409506]]],[32066, [['1', 0.951848], ['0', 0.69530495]], [['1', '0', 0.073409506]]],[41869, [['1', 0.95564665], ['0', 0.69530495]], [['1', '0', 0.073409506]]],[54382, [['1', 0.95564665], ['0', 0.69512878]], [['1', '0', 0.073409506]]],[58250, [['1', 0.95564665], ['0', 0.72499645]], [['1', '0', 0.073409506]]],[62045, [['1', 0.7793964480000001], ['0', 0.72499645]], [['1', '0', 0.073409506]]],[65406, [['1', 0.7793964480000001], ['0', 0.7279909]], [['1', '0', 0.073409506]]],[67705, [['1', 0.8085131566666668], ['0', 0.7279909]], [['1', '0', 0.06984421233333334]]],[78798, [['1', 0.8085131566666668], ['0', 0.6675149625]], [['1', '0', 0.06984421233333334]]]]
+	pprint(hardcoded)
+	json_dict_list = []
+	final_output_json = {}
+	for a in range(len(hardcoded)):
+		
+
+		json_graph_dict = {}
+
+		json_nodes_list = []
+		for b in range(len(hardcoded[a][1])):
+			temp_dict = {}
+			temp_dict["id"] = hardcoded[a][1][b][0] # speaker
+			temp_dict["group"] = hardcoded[a][1][b][1] # sentiment
+			json_nodes_list.append(temp_dict)
+		json_graph_dict["nodes"] = json_nodes_list
+			
+
+		json_edges_list = []
+		for c in range(len(hardcoded[a][2])):
+			temp_dict = {}
+			temp_dict["source"] = hardcoded[a][2][c][0] #speaker A
+			temp_dict["target"] = hardcoded[a][2][c][1] #speaker B
+			temp_dict["value"] = hardcoded[a][2][c][2] #sentiment
+			temp_dict["text"] = str(hardcoded[a][2][c][2])
+			json_edges_list.append(temp_dict)
+		json_graph_dict["links"] = json_edges_list
+
+		time_dict = {}
+		time_dict["time"] = (hardcoded[a][0] / 10.0)
+		time_dict["graph"] = json_graph_dict
+
+		json_dict_list.append(time_dict)
+
+	final_output_json["sdata"] = json_dict_list
+
+	jsonfile = open(os.path.join(localdir, "output.json"), "w")
+	json.dump(final_output_json, jsonfile)
+
+
 
 def transcript_to_node(transcript):
 	node_dict = {}
@@ -377,8 +436,11 @@ def transcript_to_node(transcript):
 
 		node_list = []
 		node_list.append(transcript[i][1])
+		node_sublist = []
 		for speaker in node_dict:
-			node_list.append([speaker, float(node_dict[speaker]["total"]) / float(node_dict[speaker]["count"])])
+			#[time, [[speaker, sentiment], [speaker, sentiment], ...]]
+			node_sublist.append([speaker, float(node_dict[speaker]["total"]) / float(node_dict[speaker]["count"])])
+		node_list.append(node_sublist)
 		node_timedlist.append(node_list)
 	return node_timedlist 
 
@@ -413,9 +475,18 @@ def transcript_to_edge(transcript):
 			if not found:
 				pairs.append([[speaker1[3], speaker2[3]], [average]])
 
+		edge_list = []
+		edge_sublist = []
+		edge_list.append(speaker3[1])
+		
 		for pair in pairs:
-			timedgraph.append([speaker3[1],[pair[0][0], pair[0][1], (sum(pair[1]) / float(len(pair[1]))) / 10.0]])
+			#[time, [[A, B, sentiment], [A, B, sentiment], ...]]
+			edge_sublist.append([pair[0][0], pair[0][1], (sum(pair[1]) / float(len(pair[1]))) / 10.0])
+		edge_list.append(edge_sublist)
+		timedgraph.append(edge_list)
 	return timedgraph
 
 
-main()
+#analyze_conversation()
+comprehensive_to_json([]);
+

@@ -10,7 +10,7 @@
 
 .nodes circle {
   stroke: #fff;
-  stroke-width: 1.5px;
+  stroke-width: 4px;
 }
 .node text {
   pointer-events: none;
@@ -19,14 +19,14 @@
 
 .text {
   font-family: Helvetica;
-  font-size: 10px;
+  font-size: 15px;
   transform: translate(-12px, -7px);
 
 }
 
 .text2 {
   font-family: Helvetica;
-  font-size: 10px;
+  font-size: 15px;
 
 }
 
@@ -42,7 +42,8 @@ var svg = d3.select("svg"),
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
     .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide", d3.forceCollide(100));
 
 d3.json("test.json", function(error, graph) {
   if (error) throw error;
@@ -54,7 +55,7 @@ d3.json("test.json", function(error, graph) {
     .enter().append("g")
     
     link.append("line")
-      .attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+      .attr("stroke-width", function(d) { return 5; })
       .attr("stroke", "blue")
 
     link.append('text')
@@ -68,7 +69,7 @@ d3.json("test.json", function(error, graph) {
     .enter().append("g");
       
     nodes.append('circle')
-    .attr("r", 5)
+    .attr("r", 20)
     .attr("fill", function(d) { return d3.interpolateRainbow(d.group); })
     .call(d3.drag()
         .on("start", dragstarted)
@@ -93,15 +94,14 @@ d3.json("test.json", function(error, graph) {
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
 
-        //     var xmedpoint = (d.source.x + d.target.x)/2
-        // var ymedpoint = (d.source.y + d.target.y)/2
     link.selectAll("text")
         .attr("transform", function(d, i) { var xmedpoint = (d.source.x + d.target.x)/2; var ymedpoint = (d.source.y + d.target.y)/2; return 'translate(' + xmedpoint + ',' + ymedpoint + ')'; })
 
     nodes
-        .attr("transform", function(d, i) { var amplifyx = d.x*10; var amplifyy = d.y*10;  return 'translate('+d.x+','+d.y+')'; })
+        .attr("transform", function(d, i) { return 'translate('+d.x+','+d.y+')'; })
   }
 });
+
 
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();

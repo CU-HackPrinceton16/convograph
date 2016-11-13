@@ -1,9 +1,10 @@
-#dependencies: ffmpeg, requests
+#dependencies: ffmpeg, requests, monotonic
 
 import os
 import sys
 import requests
 import time
+from bing_voice import *
 from keys import *
 from msft_sr import IdentificationServiceHttpClientHelper
 from pydub import AudioSegment
@@ -242,7 +243,12 @@ def main():
 	# TEXT TO SPEECH #
 	##################
 
-	
+	bingbing = bing_voice.BingVoice(BING_SPEECH_KEY)
+
+	for d in range(0, len(tts_list)):
+		curr_tts_path = tts_filepath.format(d)
+		recognized_string = recognize(open(curr_tts_path,'rb'))
+		print()
 
 
 			

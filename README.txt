@@ -11,3 +11,8 @@ apt-get install ffmpeg libavcodec-extra-53
 pip install requests
 
 ~~~~
+
+Referenced Packages:
+https://github.com/respeaker/microsoft_cognitive_services
+https://github.com/jiaaro/pydub
+https://github.com/Microsoft/Cognitive-SpeakerRecognition-Python

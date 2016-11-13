@@ -14,6 +14,12 @@ def main():
 	locale = 'en-us'
 	localdir = os.path.dirname(__file__)
 
+
+	##################
+	# INPUT ANALYSIS #
+	##################
+
+
 	#file we want to analyze
 	sample_filepath = os.path.join(localdir, "samples/sample4.wav")
 	sound_input = AudioSegment.from_wav(sample_filepath)
@@ -21,6 +27,7 @@ def main():
 
 	#folder/filename of split output
 	sections_filepath = os.path.join(localdir, "sections/section{0}.wav")
+	tts_filepath = os.path.join(localdir, "tts/section{0}.wav")
 	
 	#identified speakers in sample
 	speakers = {
@@ -88,6 +95,10 @@ def main():
 
 	#scale this later
 	#lol jk copy and paste
+
+	######################
+	# SENTIMENT ANALYSIS #
+	######################
 	
 	#SDK for speaker identifier API
 	speakerhelper = IdentificationServiceHttpClientHelper.IdentificationServiceHttpClientHelper(SPEAKER_KEY)
@@ -129,20 +140,21 @@ def main():
 
 	#identify files
 	for a in range(0, section_count + 1):
-		#[id, timestamp, speaker, confidence]
+		#[id, timestamp, length, speaker, confidence]
 		section_result = []
 		
 		#id
 		section_result.append(a)		
 		#timestamp			
-		section_result.append(timestamp_list[a])	
+		section_result.append(timestamp_list[a])
+		#length
+		section_result.append(audiolength_list[a])
 
 		if audiolength_list[a] < 1000:
 			#speaker (?)
 			section_result.append('?')		
 			#confidence (?)
 			section_result.append('?')		
-			continue
 		else:
 			identification_response = speakerhelper.identify_file(sections_filepath.format(a), id_list, force_short_audio = True)
 		
@@ -154,7 +166,7 @@ def main():
 				#speaker (?)
 				section_result.append('?')							
 
-		section_result.append(identification_response.get_confidence()) #confidence
+			section_result.append(identification_response.get_confidence()) #confidence
 
 		#add to overall list
 		speech_result.append(section_result)
@@ -165,8 +177,74 @@ def main():
 	speakerhelper.delete_profile(id_list[1])
 
 
-	#speech to text
+	###################
+	# CONSECUTIVENESS #
+	###################
+
+	buffer_section = AudioSegment.empty()
+	buffer_section = buffer_section.split_to_mono()[0]
+	buffer_section = buffer_section.set_frame_rate(16000)
+	#[[id, timestamp, length, speaker, confidence]]
+	consec_list = []
+	consec_time = 0
+	tts_counter = 0
+	tts_list = []
+	for b in range(0, section_count + 1):
+		print(b)
+		print(consec_list)
+		if b == section_count:
+			if len(consec_list) == 0:
+				curr_section = AudioSegment.from_wav(sections_filepath.format(b))
+				curr_section = curr_section.split_to_mono()[0]
+				curr_section = curr_section.set_frame_rate(16000)
+				curr_section.export(tts_filepath.format(tts_counter), format="wav")
+				tts_list.append([tts_counter, speech_result[b][1], speech_result[b][2], speech_result[b][3]])
+				tts_counter = tts_counter + 1
+				consec_list = []
+				consec_time = 0
+			else:
+				consec_list.append(speech_result[b])
+				consec_time = consec_time + speech_result[b][2]
+				for c in range(0, len(consec_list)):
+					curr_section = AudioSegment.from_wav(sections_filepath.format(consec_list[c][0]))
+					curr_section = curr_section.split_to_mono()[0]
+					curr_section = curr_section.set_frame_rate(16000)
+					buffer_section = buffer_section + curr_section
+				buffer_section.export(tts_filepath.format(tts_counter), format="wav")
+				tts_list.append([tts_counter, consec_list[0][1], consec_time, consec_list[0][3]])
+				buffer_section = AudioSegment.empty()
+				tts_counter = tts_counter + 1
+				consec_list = []
+				consec_time = 0
+		elif (speech_result[b][3] != speech_result[b+1][3]) or (consec_time + speech_result[b+1][2] >= 10000):
+			#end of consecutiveness
+			consec_list.append(speech_result[b])
+			consec_time = consec_time + speech_result[b][2]
+			for c in range(0, len(consec_list)):
+				curr_section = AudioSegment.from_wav(sections_filepath.format(consec_list[c][0]))
+				curr_section = curr_section.split_to_mono()[0]
+				curr_section = curr_section.set_frame_rate(16000)
+				buffer_section = buffer_section + curr_section
+			buffer_section.export(tts_filepath.format(tts_counter), format="wav")
+			tts_list.append([tts_counter, consec_list[0][1], consec_time, consec_list[0][3]])
+			buffer_section = AudioSegment.empty()
+			tts_counter = tts_counter + 1
+			consec_list = []
+			consec_time = 0
+		elif speech_result[b][3] == speech_result[b+1][3]:
+			#still consecutive
+			consec_list.append(speech_result[b])
+			consec_time = consec_time + speech_result[b][2]
+	print(tts_list)
+
+
+	##################
+	# TEXT TO SPEECH #
+	##################
+
 	
 
+
+			
 
 main()

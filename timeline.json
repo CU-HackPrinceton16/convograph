@@ -19,9 +19,9 @@
 			"graph":{
 				"nodes":
 					[ 
-						{"id": "Bella", "group": 0.35},
-						{"id": "Jimmy", "group": 0.4},
-						{"id": "Jake", "group": 0.44}
+						{"id": "Bella", "group": 0.99},
+						{"id": "Jimmy", "group": 0.68},
+						{"id": "Jake", "group": 0.45}
 					],
 				"links":
 					[

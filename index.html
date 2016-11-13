@@ -28,15 +28,49 @@
   font-size: 15px;
 
 }
+.ticks {
+  font: 10px sans-serif;
+}
+
+.track,
+.track-inset,
+.track-overlay {
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: #000;
+  stroke-opacity: 0.3;
+  stroke-width: 10px;
+}
+
+.track-inset {
+  stroke: #ddd;
+  stroke-width: 8px;
+}
+
+.track-overlay {
+  pointer-events: stroke;
+  stroke-width: 50px;
+  cursor: crosshair;
+}
+
+.handle {
+  fill: #b3b3b3;
+  stroke: #000;
+  stroke-opacity: 0.5;
+  stroke-width: 1.25px;
+}
 
 </style>
 <svg width="960" height="600"></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
+//Node Graph starts here
+var svgGraph = d3.select("svg"),
+    width = +svgGraph.attr("width"),
+    height = +svgGraph.attr("height");
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
@@ -47,12 +81,68 @@ var simulation = d3.forceSimulation()
 d3.json("timeline.json", function(error, graphN) {
   if (error) throw error;
 
-  var sdata = graphN.sdata[0].graph;
+  var ssdata = graphN.sdata;
+  var sdata = ssdata[0];
 
-  var link = svg.append("g")
+    //Slider starts here
+  var svg = d3.select("svg"),
+      margin = {right: 50, left: 50},
+      width = +svg.attr("width") - margin.left - margin.right,
+      height = +svg.attr("height");
+
+  var x = d3.scaleLinear()
+      .domain([0, 180])
+      .range([0, width])
+      .clamp(true);
+
+  var slider = svg.append("g")
+      .attr("class", "slider")
+      .attr("transform", "translate(" + margin.left + "," + height / 15 + ")");
+
+  slider.append("line")
+      .attr("class", "track")
+      .attr("x1", x.range()[0])
+      .attr("x2", x.range()[1])
+    .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+      .attr("class", "track-inset")
+    .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+      .attr("class", "track-overlay")
+      .call(d3.drag()
+          .on("start.interrupt", function() { slider.interrupt(); })
+          .on("start drag", function() { 
+            move(x.invert(d3.event.x)); 
+            console.log("this is cx value: " + handle.attr("cx"));
+            console.log("this is time: " + sdata.time);
+            if (handle.attr("cx") < sdata.time){
+              console.log("hello");
+              sdata = ssdata[1];
+              update(svgGraph);
+            }
+          }));
+
+  slider.insert("g", ".track-overlay")
+      .attr("class", "ticks")
+      .attr("transform", "translate(0," + 18 + ")")
+    .selectAll("text")
+    .data(x.ticks(10))
+    .enter().append("text")
+      .attr("x", x)
+      .attr("text-anchor", "middle")
+      .text(function(d) { return d + "sec"; });
+
+  var handle = slider.insert("circle", ".track-overlay")
+      .attr("class", "handle")
+      .attr("r", 9);
+
+
+  function move(h) {
+    handle.attr("cx", x(h));
+  }
+
+  var link = svgGraph.append("g")
     .attr("class", "links")
     .selectAll("line")
-    .data(sdata.links)
+    .data(sdata.graph.links)
     .enter().append("g")
     
     link.append("line")
@@ -63,10 +153,10 @@ d3.json("timeline.json", function(error, graphN) {
       .attr('class', 'text2')
       .text(function(d) {return d.text;})
 
-  var nodes = svg.append("g")
+  var nodes = svgGraph.append("g")
     .attr("class", "nodes")
     .selectAll("g")
-    .data(sdata.nodes)
+    .data(sdata.graph.nodes)
     .enter().append("g");
       
     nodes.append('circle')
@@ -82,11 +172,11 @@ d3.json("timeline.json", function(error, graphN) {
     .text(function(d) {return d.id;})
 
   simulation
-      .nodes(sdata.nodes)
+      .nodes(sdata.graph.nodes)
       .on("tick", ticked);
 
   simulation.force("link")
-      .links(sdata.links);
+      .links(sdata.graph.links);
 
   function ticked() {
     link.selectAll("line")
@@ -101,6 +191,56 @@ d3.json("timeline.json", function(error, graphN) {
     nodes
         .attr("transform", function(d, i) { return 'translate('+d.x+','+d.y+')'; })
   }
+
+  function update(svgGraph) {
+    // svgGraph.remove();
+    d3.selectAll("g").data(svgGraph).remove();
+    d3.selectAll("g").data(svgGraph).enter();
+    console.log("updating");
+    var svgGraph = d3.select("svg"),
+    width = +svgGraph.attr("width"),
+    height = +svgGraph.attr("height");
+
+    var link = svgGraph.append("g")
+    .attr("class", "links")
+    .selectAll("line")
+    .data(sdata.graph.links)
+    .enter().append("g")
+    
+    link.append("line")
+      .attr("stroke-width", function(d) { return 5; })
+      .attr("stroke", function(d) { return d3.interpolateViridis(d.value);})
+
+    link.append('text')
+      .attr('class', 'text2')
+      .text(function(d) {return d.text;})
+
+    var nodes = svgGraph.append("g")
+      .attr("class", "nodes")
+      .selectAll("g")
+      .data(sdata.graph.nodes)
+      .enter().append("g");
+        
+      nodes.append('circle')
+      .attr("r", 20)
+      .attr("fill", function(d) { return d3.interpolateViridis(d.group); })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+      nodes.append('text')
+      .attr('class', 'text')
+      .text(function(d) {return d.id;})
+
+    simulation
+        .nodes(sdata.graph.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(sdata.graph.links);
+  }
+
 });
 
 

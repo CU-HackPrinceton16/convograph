@@ -9,6 +9,17 @@ from keys import *
 from msft_sr import IdentificationServiceHttpClientHelper
 from pydub import AudioSegment
 from pydub.silence import split_on_silence, detect_silence
+import requests
+
+#GCP
+import argparse
+import base64
+import json
+from transcribe import get_speech_service
+from googleapiclient import discovery
+import httplib2
+from oauth2client.client import GoogleCredentials
+from oauth2client.service_account import ServiceAccountCredentials
 
 def main():
 
@@ -97,9 +108,9 @@ def main():
 	#scale this later
 	#lol jk copy and paste
 
-	######################
-	# SENTIMENT ANALYSIS #
-	######################
+	####################
+	# SPEAKER ANALYSIS #
+	####################
 	
 	#SDK for speaker identifier API
 	speakerhelper = IdentificationServiceHttpClientHelper.IdentificationServiceHttpClientHelper(SPEAKER_KEY)
@@ -185,7 +196,7 @@ def main():
 	buffer_section = AudioSegment.empty()
 	buffer_section = buffer_section.split_to_mono()[0]
 	buffer_section = buffer_section.set_frame_rate(16000)
-	#[[id, timestamp, length, speaker, confidence]]
+	#[[id, timestamp, length, speaker]]
 	consec_list = []
 	consec_time = 0
 	tts_counter = 0
@@ -243,12 +254,72 @@ def main():
 	# TEXT TO SPEECH #
 	##################
 
-	bingbing = bing_voice.BingVoice(BING_SPEECH_KEY)
+	service = get_speech_service()
 
 	for d in range(0, len(tts_list)):
+		time.sleep(1)
 		curr_tts_path = tts_filepath.format(d)
-		recognized_string = recognize(open(curr_tts_path,'rb'))
-		print()
+
+		with open(curr_tts_path,'rb') as speech:
+			speech_content = base64.b64encode(speech.read())
+
+		service_request = service.speech().syncrecognize(
+			body={
+				'config': {
+					# There are a bunch of config options you can specify. See
+					# https://goo.gl/KPZn97 for the full list.
+					'encoding': 'LINEAR16',  # raw 16-bit signed LE samples
+					'sampleRate': 16000,  # 16 khz
+					# See http://g.co/cloud/speech/docs/languages for a list of
+					# supported languages.
+					'languageCode': 'en-US',  # a BCP-47 language tag
+				},
+				'audio': {
+					'content': speech_content.decode('UTF-8')
+				}
+			})
+		response = service_request.execute()
+		print(json.dumps(response))
+
+		if(response != {}):
+			text = response["results"][0]["alternatives"][0]["transcript"]
+			tts_list[d].append(text)
+		else:
+			tts_list[d].append("?")
+		
+	#[[id, timestamp, length, speaker, text]]
+	print(tts_list)
+
+	######################
+	# SENTIMENT ANALYSIS #
+	######################
+
+	for e in range(0, len(tts_list)):
+		curr_transcript = tts_list[e][4]
+		json_dict = {}
+		json_dict["documents"] = [{"language": "en","id": str(e), "text": curr_transcript}]
+		json_output = json.dumps(json_dict)
+		
+		sentiment_url = "https://westus.api.cognitive.microsoft.com/text/analytics/v2.0/sentiment"
+		try:
+			print(json_output)
+			sentiment_request = requests.post(sentiment_url, json_output, headers ={
+				'Content-type': 'application/json',
+				"Ocp-Apim-Subscription-Key": SENTIMENT_KEY
+			})
+			response_text = sentiment_request.json()
+			print(response_text)
+			sentiment_val = response_text["documents"][0]["score"]
+			tts_list[e].append(sentiment_val)
+		except HTTPError as e:
+			raise RequestError("recognition request failed: {0}".format(
+				getattr(e, "reason", "status {0}".format(e.code))))  # use getattr to be compatible with Python 2.6
+		except URLError as e:
+			raise RequestError("recognition connection failed: {0}".format(e.reason))
+
+	print(tts_list)
+
+
 
 
 			

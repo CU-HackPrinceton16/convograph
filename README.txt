@@ -17,6 +17,8 @@ pip install monotonic
 pip install google-api-python-client
 
 pip install --upgrade google-api-python-client
+
+pip install requests
 ~~~~
 
 Referenced Packages:

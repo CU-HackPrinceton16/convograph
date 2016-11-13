@@ -7,7 +7,6 @@ import argparse
 import base64
 import json
 from transcribe import get_speech_service
-
 from googleapiclient import discovery
 import httplib2
 from oauth2client.client import GoogleCredentials

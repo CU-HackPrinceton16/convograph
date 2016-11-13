@@ -1,0 +1,52 @@
+{
+	"sdata": 
+	[
+		{
+			"time": 10,
+			"graph":{
+				"nodes":
+				[ {"id": "Bella", "group": 0.35},
+				{"id": "Jimmy", "group": 0.4},
+				{"id": "Jake", "group": 0.44}],
+				"links":
+				[{"source": "Bella", "target": "Jimmy", "value": 0.99, "text": "hello"},
+				{"source": "Jimmy", "target": "Jake", "value": 0.2, "text": "hello"},
+				{"source": "Jake", "target": "Bella", "value": 0.6, "text": "hello"}]
+			}
+		},
+		{
+			"time": 20,
+			"graph":{
+				"nodes":
+					[ 
+						{"id": "Bella", "group": 0.35},
+						{"id": "Jimmy", "group": 0.4},
+						{"id": "Jake", "group": 0.44}
+					],
+				"links":
+					[
+						{"source": "Bella", "target": "Jimmy", "value": 0.99, "text": "hello"},
+						{"source": "Jimmy", "target": "Jake", "value": 0.2, "text": "hello"},
+						{"source": "Jake", "target": "Bella", "value": 0.6, "text": "hello"}
+					]
+			}
+		},
+		{
+			"time": 30,
+			"graph":{
+				"nodes":
+					[ 
+						{"id": "Bella", "group": 0.35},
+						{"id": "Jimmy", "group": 0.4},
+						{"id": "Jake", "group": 0.44}
+					],
+				"links":
+					[
+						{"source": "Bella", "target": "Jimmy", "value": 0.99, "text": "hello"},
+						{"source": "Jimmy", "target": "Jake", "value": 0.2, "text": "hello"},
+						{"source": "Jake", "target": "Bella", "value": 0.6, "text": "hello"}
+					]
+			}
+		}
+	]
+}

@@ -1,0 +1,39 @@
+{% extends "bootstrap/base.html" %}
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Convograph</title>
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href= "{{ url_for('static', filename='default.css') }}"  />
+
+</head>
+
+<body>
+
+<!-- gray bar across top -->
+<div id="header">
+	<h1>&nbsp;</h1>
+</div>
+
+<!-- sidebar -->
+<div id="menu">
+	<ul>
+		<li><a href="/">Home</a></li>
+		<li><a href="/path1">path1</a></li>
+		<li><a href="/path2">path2</a></li>
+	</ul>
+</div>
+
+<!-- outlet -->
+<div id="content">
+	<div id="left">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+</body>
+</html>

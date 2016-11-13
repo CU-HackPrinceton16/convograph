@@ -1,0 +1,73 @@
+{% extends "head.html" %}
+{% block content %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<div ng-app="myApp" ng-controller="todoCtrl">
+
+<h2>Recordings</h2>
+
+<form ng-submit="todoAdd()">
+    <input type="submit" value="Add New">
+</form>
+
+<br>
+
+<div ng-repeat="x in todoList">
+    <input type="checkbox" ng-model="x.done"> <span ng-bind="x.todoText"></span>
+    <script src="https://cdn.WebRTC-Experiment.com/MediaStreamRecorder.js"></script>
+    <script src="https://cdn.WebRTC-Experiment.com/gumadapter.js"></script>
+
+    <div style="padding: 5px;">
+        <label for="time-interval">Record a training sample (30s):</label>
+        <button id="start-recording">Start</button>
+        <button id="stop-recording" disabled>Stop</button>
+        <button id="save-recording" disabled>Save</button>
+        <script src="../static/recording.js"></script>
+    </div>
+</div>
+
+<p><button ng-click="remove()">Remove marked</button></p>
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('todoCtrl', function($scope) {
+    $scope.todoList = [];
+
+    $scope.todoAdd = function() {
+        $scope.todoList.push({todoText:$scope.todoInput, done:false});
+        $scope.todoInput = "";
+    };
+
+    $scope.remove = function() {
+        var oldList = $scope.todoList;
+        $scope.todoList = [];
+        angular.forEach(oldList, function(x) {
+            if (!x.done) $scope.todoList.push(x);
+        });
+    };
+});
+</script>
+</div>
+
+<!--
+<div class="container">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+    <link type="text/css" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+    <script src="../static/todo.js"></script>
+
+    <h2>Recordings</h2>
+    <p><em>Click and drag to reorder, double click to cross an item off.</em></p>
+
+    <div id="button">Add</div>
+    <br/>
+    <h4>Added:</h4>
+    <br/>
+    <ol></ol>
+</div>
+-->
+
+{% endblock %}
+
+

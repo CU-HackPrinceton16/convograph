@@ -1,0 +1,59 @@
+{% extends "head.html" %}
+{% block content %}
+
+<script src="https://cdn.WebRTC-Experiment.com/MediaStreamRecorder.js"></script>
+<script src="https://cdn.WebRTC-Experiment.com/gumadapter.js"></script>
+
+<div class="container">
+    <div class="jumbotron text-center">
+        <h2>Ayylmao</h2>
+    </div>
+
+    <div class="row">
+        <div id="training-recording" style="padding: 5px;">
+            <label for="time-interval">Record a training sample (30s):</label>
+            <button id="start-recording">Start</button>
+            <div id="status"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div id="convo-recording" style="padding: 5px;">
+            <label for="time-interval">Record a conversation (>20 min):</label>
+            <button id="start-recording">Start</button>
+            <button id="stop-recording">Stop</button>
+            <div id="status"></div>
+        </div>
+    </div>
+    <script src="../static/recording.js"></script>
+
+    <div class="row">
+        <div id="transcript" class="col-sm-4 text-center">
+            transcript
+
+        </div>
+        <div id="linegraphs" class="col-sm-4 text-center">
+            linegraphs
+
+        </div>
+        <div id="speaker-list" class="col-sm-4 text-center">
+            speaker-list
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="graph" class="text-center">
+            graph
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="timeline" class="text-center">
+            timeline
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

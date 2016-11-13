@@ -5,9 +5,9 @@
 		{"id": "Jake", "group": 0.44}
 	],
 	"links":[
-		{"source": "Bella", "target": "Jimmy", "value": 1},
-		{"source": "Jimmy", "target": "Jake", "value": 2},
-		{"source": "Jake", "target": "Bella", "value": 50},
-		{"source": "Bella", "target": "Jake", "value": 1}
+		{"source": "Bella", "target": "Jimmy", "value": 1, "text": "hello"},
+		{"source": "Jimmy", "target": "Jake", "value": 2, "text": "hello"},
+		{"source": "Jake", "target": "Bella", "value": 50, "text": "hello"},
+		{"source": "Bella", "target": "Jake", "value": 1, "text": "hello"}
 	]
 }

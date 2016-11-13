@@ -6,8 +6,8 @@
 	],
 	"links":[
 		{"source": "Bella", "target": "Jimmy", "value": 1, "text": "hello"},
-		{"source": "Jimmy", "target": "Jake", "value": 2, "text": "hello"},
-		{"source": "Jake", "target": "Bella", "value": 50, "text": "hello"},
+		{"source": "Jimmy", "target": "Jake", "value": 1, "text": "hello"},
+		{"source": "Jake", "target": "Bella", "value": 1, "text": "hello"},
 		{"source": "Bella", "target": "Jake", "value": 1, "text": "hello"}
 	]
 }
